@@ -8,5 +8,10 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  modules: ['@nuxt/icon']
+  modules: ['@nuxt/icon'],
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8000'
+    }
+  }
 });

@@ -13,9 +13,12 @@
 </template>
 
 <script setup lang="ts">
+const runtimeConfig = useRuntimeConfig();
 const isDrawing = ref(false);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
+const ws = ref<WebSocket | null>(null);
+const lastPoints = ref<{ x: number; y: number }[]>([]);
 const lastCursorPos = ref({ x: 0, y: 0 });
 
 function startDrawing(event: MouseEvent) {
@@ -25,6 +28,21 @@ function startDrawing(event: MouseEvent) {
 
 function stopDrawing() {
   isDrawing.value = false;
+  if (lastPoints.value.length > 0) {
+    ws.value?.send(JSON.stringify({ type: 'draw', points: lastPoints.value }));
+    lastPoints.value = [];
+  }
+}
+
+function drawLine(points: { x: number; y: number }[]) {
+  if (!ctx.value) return;
+
+  ctx.value.beginPath();
+  ctx.value.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.value.lineTo(points[i].x, points[i].y);
+  }
+  ctx.value.stroke();
 }
 
 function draw(event: MouseEvent) {
@@ -36,6 +54,7 @@ function draw(event: MouseEvent) {
   ctx.value.moveTo(lastCursorPos.value.x, lastCursorPos.value.y);
   ctx.value.lineTo(offsetX, offsetY);
   ctx.value.stroke();
+  lastPoints.value.push({ x: offsetX, y: offsetY });
 
   lastCursorPos.value = { x: offsetX, y: offsetY };
 }
@@ -63,10 +82,18 @@ onMounted(() => {
   ctx.value = canvas.value.getContext('2d');
   handleResize();
   window.addEventListener('resize', handleResize);
+  ws.value = new WebSocket(`${runtimeConfig.public.apiBase}/ws`);
+  ws.value.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'draw') {
+      drawLine(data.points);
+    }
+  };
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
+  ws.value?.close();
 });
 </script>
 
