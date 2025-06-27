@@ -18,7 +18,6 @@ const isDrawing = ref(false);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 const ws = ref<WebSocket | null>(null);
-const lastPoints = ref<{ x: number; y: number }[]>([]);
 const lastCursorPos = ref({ x: 0, y: 0 });
 
 function startDrawing(event: MouseEvent) {
@@ -28,10 +27,6 @@ function startDrawing(event: MouseEvent) {
 
 function stopDrawing() {
   isDrawing.value = false;
-  if (lastPoints.value.length > 0) {
-    ws.value?.send(JSON.stringify({ type: 'draw', points: lastPoints.value }));
-    lastPoints.value = [];
-  }
 }
 
 function drawLine(points: { x: number; y: number }[]) {
@@ -54,7 +49,12 @@ function draw(event: MouseEvent) {
   ctx.value.moveTo(lastCursorPos.value.x, lastCursorPos.value.y);
   ctx.value.lineTo(offsetX, offsetY);
   ctx.value.stroke();
-  lastPoints.value.push({ x: offsetX, y: offsetY });
+  ws.value?.send(
+    JSON.stringify({
+      type: 'draw',
+      points: [lastCursorPos.value, { x: offsetX, y: offsetY }]
+    })
+  );
 
   lastCursorPos.value = { x: offsetX, y: offsetY };
 }
