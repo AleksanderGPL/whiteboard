@@ -4,7 +4,7 @@
     "ioredis": "npm:ioredis@^5.6.1"
   },
   "tasks": {
-    "start": "deno run --allow-net main.ts",
+    "start": "deno run --allow-net --allow-env main.ts",
     "dev": "deno run --watch --allow-net --allow-env --env-file main.ts"
   },
   "compilerOptions": {
