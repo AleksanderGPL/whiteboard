@@ -40,16 +40,33 @@ function draw(event: MouseEvent) {
   lastCursorPos.value = { x: offsetX, y: offsetY };
 }
 
-onMounted(() => {
-  if (!canvas.value) return;
+function handleResize() {
+  if (!canvas.value || !ctx.value) return;
+  const imgData = ctx.value.getImageData(
+    0,
+    0,
+    canvas.value.width,
+    canvas.value.height
+  );
+
   canvas.value.width = canvas.value.clientWidth;
   canvas.value.height = canvas.value.clientHeight;
-  ctx.value = canvas.value.getContext('2d');
-
-  if (!ctx.value) return;
   ctx.value.lineWidth = 2;
   ctx.value.lineCap = 'round';
   ctx.value.strokeStyle = '#ffffff';
+
+  ctx.value.putImageData(imgData, 0, 0);
+}
+
+onMounted(() => {
+  if (!canvas.value) return;
+  ctx.value = canvas.value.getContext('2d');
+  handleResize();
+  window.addEventListener('resize', handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 
