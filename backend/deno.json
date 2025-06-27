@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.8.3",
+    "ioredis": "npm:ioredis@^5.6.1"
+  },
+  "tasks": {
+    "start": "deno run --allow-net main.ts",
+    "dev": "deno run --watch --allow-net --allow-env --env-file main.ts"
+  },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}
