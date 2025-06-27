@@ -1,12 +1,56 @@
 <template>
-  <div class="whiteboard-container">
-    <canvas class="w-full h-screen" ref="canvas" />
+  <div class="whiteboard-container select-none">
+    <canvas
+      class="w-full h-screen"
+      ref="canvas"
+      v-on:mousedown="startDrawing"
+      v-on:mouseup="stopDrawing"
+      v-on:mouseleave="stopDrawing"
+      v-on:mousemove="draw"
+    />
     <Dock />
   </div>
 </template>
 
 <script setup lang="ts">
+const isDrawing = ref(false);
 const canvas = ref<HTMLCanvasElement | null>(null);
+const ctx = ref<CanvasRenderingContext2D | null>(null);
+const lastCursorPos = ref({ x: 0, y: 0 });
+
+function startDrawing(event: MouseEvent) {
+  isDrawing.value = true;
+  lastCursorPos.value = { x: event.clientX, y: event.clientY };
+}
+
+function stopDrawing() {
+  isDrawing.value = false;
+}
+
+function draw(event: MouseEvent) {
+  if (!isDrawing.value || !ctx.value) return;
+
+  const { offsetX, offsetY } = event;
+
+  ctx.value.beginPath();
+  ctx.value.moveTo(lastCursorPos.value.x, lastCursorPos.value.y);
+  ctx.value.lineTo(offsetX, offsetY);
+  ctx.value.stroke();
+
+  lastCursorPos.value = { x: offsetX, y: offsetY };
+}
+
+onMounted(() => {
+  if (!canvas.value) return;
+  canvas.value.width = canvas.value.clientWidth;
+  canvas.value.height = canvas.value.clientHeight;
+  ctx.value = canvas.value.getContext('2d');
+
+  if (!ctx.value) return;
+  ctx.value.lineWidth = 2;
+  ctx.value.lineCap = 'round';
+  ctx.value.strokeStyle = '#ffffff';
+});
 </script>
 
 <style scoped>
